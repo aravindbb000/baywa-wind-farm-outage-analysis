@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BayWa r.e. — Insurance Report</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green-dark:   #1a5c38;
+  --green-mid:    #2e7d52;
+  --green-light:  #4caf80;
+  --green-pale:   #e8f5ee;
+  --green-accent: #00c85a;
+  --blue-light:   #e8f0fe;
+  --blue-dark:    #1565c0;
+  --purple-light: #f3e8ff;
+  --purple-dark:  #6b21a8;
+  --amber-light:  #fff8e1;
+  --amber-dark:   #e65100;
+  --text-dark:    #1a1a2e;
+  --text-mid:     #4a4a5a;
+  --text-light:   #6b7280;
+  --border:       #e2e8f0;
+  --card-bg:      #ffffff;
+  --page-bg:      #f0f4f8;
+  --sidebar-w:    240px;
+  --header-h:     64px;
+}
+html, body { min-height: 100%; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--page-bg); color: var(--text-dark); display: flex; }
+
+/* ── Sidebar ── */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-w);
+  background: var(--green-dark); color: white; display: flex; flex-direction: column; z-index: 100;
+}
+.sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+.sidebar-logo .brand { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.sidebar-logo .sub   { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 4px; }
+.sidebar-nav { flex: 1; padding: 12px 0; }
+.sidebar-section-title {
+  padding: 14px 20px 4px; font-size: 11px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); letter-spacing: 0.8px; font-weight: 700;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer;
+  font-size: 13.5px; color: rgba(255,255,255,0.8); border-left: 3px solid transparent;
+  transition: all 0.2s; text-decoration: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.nav-item.active { background: rgba(255,255,255,0.14); color: white; border-left-color: var(--green-accent); font-weight: 600; }
+.sidebar-footer { padding: 18px 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11.5px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+/* ── Main ── */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+  height: var(--header-h); background: white; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 50;
+}
+.topbar-breadcrumb { font-size: 14px; color: var(--text-light); }
+.topbar-breadcrumb a { color: var(--text-light); text-decoration: none; }
+.topbar-breadcrumb a:hover { color: var(--green-dark); }
+.topbar-actions { display: flex; gap: 12px; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 600; transition: all 0.2s; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--green-dark); color: white; }
+.btn-primary:hover { background: var(--green-mid); }
+.btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text-dark); }
+.btn-outline:hover { border-color: var(--green-light); color: var(--green-dark); background: var(--green-pale); }
+
+/* ── Content ── */
+.content { padding: 28px 32px 48px; }
+.card {
+  background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);
+  padding: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); margin-bottom: 20px;
+}
+.card-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 800px)  { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+.kpi-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 16px 18px; }
+.kpi-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.kpi-icon-green  { background: var(--green-pale);  color: var(--green-dark); }
+.kpi-icon-blue   { background: var(--blue-light);  color: var(--blue-dark); }
+.kpi-icon-purple { background: var(--purple-light);color: var(--purple-dark); }
+.kpi-label  { font-size: 11.5px; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.kpi-value  { font-size: 24px; font-weight: 800; color: var(--text-dark); }
+.kpi-hint   { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { background: var(--green-dark); color: white; padding: 9px 12px; text-align: left; font-weight: 600; }
+.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.data-table tr:hover td { background: var(--green-pale); }
+.chart-box { border-radius: 10px; border: 1px solid var(--border); overflow: hidden; background: white; margin-bottom: 20px; }
+.chart-header { padding: 14px 18px 4px; }
+.chart-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+.chart-sub   { font-size: 12px; color: var(--text-light); }
+.table-wrap  { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+
+.spinner { width: 32px; height: 32px; border: 3px solid var(--green-pale); border-top-color: var(--green-dark); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-wrap { display: flex; align-items: center; gap: 12px; padding: 48px; color: var(--text-light); }
+.section-sep { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+.limitation-list { font-size: 13px; color: var(--text-mid); line-height: 2.2; padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+      </svg>
+      BayWa r.e.
+    </div>
+    <div class="sub">Wind Farm Outage Hackathon</div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="sidebar-section-title">Navigation</div>
+    <a href="/" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Outage Analysis
+    </a>
+    <a href="/insurance" class="nav-item active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Insurance Report
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    BayWa r.e. Hackathon<br>Portable Local Application
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <a href="/">Analysis</a> &rsaquo; <strong>Insurance Report</strong>
+    </div>
+    <div class="topbar-actions">
+      <a href="/api/insurance_report/download_html" class="btn btn-outline" download>
+        📄 Download HTML
+      </a>
+      <a href="/api/insurance_report/download_csv" class="btn btn-outline" download>
+        📥 Download CSV
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="loading-state" class="loading-wrap">
+      <div class="spinner"></div>
+      <span>Loading insurance report data...</span>
+    </div>
+
+    <div id="not-run-state" style="display:none; padding:48px; text-align:center; color:var(--text-light);">
+      <h3 style="font-size:18px; margin-bottom:8px; color:var(--text-mid);">No analysis results yet</h3>
+      <p>Go to the <a href="/" style="color:var(--green-dark); font-weight:600;">Outage Analysis</a> page and click <strong>Run Analysis</strong> first.</p>
+    </div>
+
+    <div id="report-body" style="display:none">
+
+      <!-- Report Header -->
+      <div style="margin-bottom:20px">
+        <h1 style="font-size:26px; font-weight:800; color:var(--green-dark)">Wind Farm Outage Insurance Claim Assessment</h1>
+        <p style="font-size:14px; color:var(--text-mid); margin-top:4px;">
+          Reconstructed target-turbine wind measurements, power curve translation, and benchmarked energy loss.
+        </p>
+      </div>
+
+      <!-- Top KPI Summary Cards -->
+      <div class="grid-4" id="kpi-top" style="margin-bottom:20px"></div>
+
+      <!-- Charts: Wind Speed & Cumulative Energy Loss -->
+      <div class="grid-2">
+        <div class="chart-box">
+          <div class="chart-header">
+            <div class="chart-title">Wind Speed Reconstruction During Outage</div>
+            <div class="chart-sub">Observed readings before outage and predicted wind during outage</div>
+          </div>
+          <div id="chart-ws" style="height:280px;padding:8px"></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-header">
+            <div class="chart-title">Cumulative Potential Energy Loss</div>
+            <div class="chart-sub">Running total of energy (kWh) under the zero-production assumption</div>
+          </div>
+          <div id="chart-ce" style="height:280px;padding:8px"></div>
+        </div>
+      </div>
+
+      <hr class="section-sep"/>
+
+      <!-- Selected Model & Validation -->
+      <div class="card">
+        <div class="card-title">Model Specification &amp; Leakage Audit</div>
+        <div id="model-details" style="margin-top:12px"></div>
+      </div>
+
+      <!-- Shown-Test Performance -->
+      <div class="card">
+        <div class="card-title">Shown-Test Benchmark Performance (Sep 4–9 Observed Actuals)</div>
+        <p style="font-size:12.5px; color:var(--text-light); margin:4px 0 12px">
+          Independent evaluation on visible target turbine readings. These observations were never used for model training or tuning.
+        </p>
+        <div id="shown-test-table"></div>
+      </div>
+
+      <!-- Reference Turbine Correlation Evidence -->
+      <div class="card">
+        <div class="card-title">Reference Turbine Correlation Evidence</div>
+        <p style="font-size:12.5px; color:var(--text-light); margin:4px 0 12px">
+          Pearson and Spearman correlations computed strictly on paired pre-outage observations.
+        </p>
+        <div id="corr-table"></div>
+      </div>
+
+      <!-- Assumptions & Limitations -->
+      <div class="card">
+        <div class="card-title">Assumptions &amp; Methodological Limitations</div>
+        <ul class="limitation-list" id="assumptions-list"></ul>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; gap:12px; margin-top:8px; flex-wrap:wrap;">
+        <a href="/api/insurance_report/download_html" class="btn btn-primary" download>
+          📄 Download Complete HTML Report
+        </a>
+        <a href="/api/insurance_report/download_csv" class="btn btn-outline" download>
+          📥 Download Interval CSV
+        </a>
+        <a href="/" class="btn btn-outline">
+          &larr; Back to Analysis
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadInsuranceReport() {
+  const r = await fetch('/api/insurance_report');
+  const loading = document.getElementById('loading-state');
+  const notRun  = document.getElementById('not-run-state');
+  const body    = document.getElementById('report-body');
+
+  if (!r.ok) {
+    loading.style.display = 'none';
+    notRun.style.display = 'block';
+    return;
+  }
+  const d = await r.json();
+  if (d.status === 'not_run') {
+    loading.style.display = 'none';
+    notRun.style.display = 'block';
+    return;
+  }
+
+  loading.style.display = 'none';
+  body.style.display = 'block';
+
+  const fmt   = (v,dp=3) => v==null ? 'N/A' : Number(v).toFixed(dp);
+  const fmtKwh = v => v==null ? 'N/A' : Number(v).toLocaleString('en-US',{maximumFractionDigits:1})+' kWh';
+  const fmtKw  = v => v==null ? 'N/A' : Number(v).toFixed(1)+' kW';
+  const stm = d.shown_test_metrics || {};
+
+  // Top KPIs
+  document.getElementById('kpi-top').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon-blue">⏱</div>
+      <div class="kpi-label">Outage Period</div>
+      <div style="font-size:13px; font-weight:700; margin-top:4px">${d.outage_start?.slice(0,16)}</div>
+      <div style="font-size:12px; color:var(--text-mid)">&rarr; ${d.outage_end?.slice(0,16)}</div>
+      <div class="kpi-hint">Duration: ${d.duration_str} (${d.n_intervals} readings)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon-green">🏆</div>
+      <div class="kpi-label">Selected Model</div>
+      <div style="font-size:16px; font-weight:800; color:var(--green-dark); margin-top:4px">${d.selected_model}</div>
+      <div class="kpi-hint">Refs: ${(d.ref_turbines||[]).join(', ')}</div>
+    </div>
+    <div class="kpi-card" style="background:var(--green-pale); border-color:var(--green-light);">
+      <div class="kpi-icon kpi-icon-green">⚡</div>
+      <div class="kpi-label" style="color:var(--green-dark);">Potential Energy Loss</div>
+      <div style="font-size:22px; font-weight:800; color:var(--green-dark); margin-top:4px">${fmtKwh(d.total_energy_kwh)}</div>
+      <div class="kpi-hint">Zero-Production Assumption</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon-blue">🎯</div>
+      <div class="kpi-label">Validation MAE</div>
+      <div style="font-size:14px; font-weight:700; margin-top:4px">MAE: ${fmt(d.val_metrics?.mae)} m/s</div>
+      <div style="font-size:11px; color:var(--text-mid)">RMSE: ${fmt(d.val_metrics?.rmse)} m/s &bull; WMAPE: ${fmt(d.val_metrics?.wmape,2)}%</div>
+      <div class="kpi-hint">Chronological holdout (n = ${d.val_metrics?.n ?? 'N/A'})</div>
+    </div>
+  `;
+
+  // Fetch outage detection series for chart
+  let obsData = [], predData = [], outageStart = d.outage_start, outageEnd = d.outage_end;
+  try {
+    const odr = await fetch('/api/outage_detection');
+    if (odr.ok) {
+      const od = await odr.json();
+      obsData  = od.observed  || [];
+      predData = od.predicted || [];
+    }
+  } catch(e) {}
+
+  const obs  = obsData.filter(p=>p.y!=null);
+  const pred = predData.filter(p=>p.y!=null);
+  Plotly.newPlot('chart-ws', [
+    {x:obs.map(p=>p.x), y:obs.map(p=>p.y), name:'Observed Wind Speed', mode:'lines', line:{color:'#1a5c38', width:1.5}},
+    {x:pred.map(p=>p.x), y:pred.map(p=>p.y), name:'Reconstructed (Outage)', mode:'lines', line:{color:'#ff7043', width:2, dash:'dash'}},
+  ], {
+    margin:{t:10, b:50, l:55, r:10},
+    xaxis:{title:'Date & Time', gridcolor:'#f0f4f8'},
+    yaxis:{title:'Wind Speed (m/s)', gridcolor:'#f0f4f8'},
+    plot_bgcolor:'#fff', paper_bgcolor:'#fff',
+    legend:{orientation:'h', y:-0.22},
+    shapes: outageStart ? [{type:'rect', xref:'x', yref:'paper', x0:outageStart, x1:outageEnd, y0:0, y1:1, fillcolor:'rgba(255,112,67,0.12)', line:{width:0}}] : [],
+  }, {responsive:true, displayModeBar:false});
+
+  // Cumulative energy chart from interval rows
+  const rows = d.interval_rows || [];
+  const ceX = rows.map(r=>r.timestamp);
+  const ceY = rows.map(r=>r.cum_energy_kwh);
+  Plotly.newPlot('chart-ce', [
+    {x:ceX, y:ceY, name:'Cumulative Energy (kWh)', mode:'lines', fill:'tozeroy',
+     line:{color:'#1a5c38', width:2.5}, fillcolor:'rgba(76,175,128,0.15)'},
+  ], {
+    margin:{t:10, b:50, l:70, r:10},
+    xaxis:{title:'Date & Time', gridcolor:'#f0f4f8'},
+    yaxis:{title:'Energy (kWh)', gridcolor:'#f0f4f8'},
+    plot_bgcolor:'#fff', paper_bgcolor:'#fff',
+  }, {responsive:true, displayModeBar:false});
+
+  // Model details
+  document.getElementById('model-details').innerHTML = `
+    <table class="data-table">
+      <tr><td style="font-weight:600; width:220px;">Selected Model Family</td><td>${d.selected_model}</td></tr>
+      <tr><td style="font-weight:600;">Reference Wind Parks</td><td>${(d.ref_turbines||[]).join(', ') || 'N/A'}</td></tr>
+      <tr><td style="font-weight:600;">Validation MAE / RMSE / WMAPE</td><td>${fmt(d.val_metrics?.mae)} m/s &bull; ${fmt(d.val_metrics?.rmse)} m/s &bull; ${fmt(d.val_metrics?.wmape, 2)}%</td></tr>
+      <tr><td style="font-weight:600;">Validation Sample Count</td><td>${d.val_metrics?.n ?? 'N/A'} intervals (last 20% of pre-outage observed records)</td></tr>
+      <tr><td style="font-weight:600;">Leakage Prevention Rule</td><td>Zero future labels or outage observations used during training, tuning, or feature construction.</td></tr>
+    </table>`;
+
+  // Shown-test table
+  document.getElementById('shown-test-table').innerHTML = `
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Metric</th><th>Benchmark Value</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Wind Speed MAE</td><td>${fmt(stm.mae)} m/s</td><td>Mean absolute prediction error on observed test set</td></tr>
+        <tr><td>Wind Speed RMSE</td><td>${fmt(stm.rmse)} m/s</td><td>Root mean squared error on observed test set</td></tr>
+        <tr><td>Wind Speed WMAPE</td><td>${fmt(stm.wmape,2)}%</td><td>Normalized weighted absolute percentage error</td></tr>
+        <tr><td>Power MAE</td><td>${fmtKw(stm.power_mae)}</td><td>Mean absolute error in power conversion</td></tr>
+        <tr><td>Power RMSE</td><td>${fmtKw(stm.power_rmse)}</td><td>Root mean squared error in power conversion</td></tr>
+        <tr><td>Energy Deviation</td><td>${fmt(stm.energy_deviation_pct,2)}%</td><td>Deviation of cumulative reconstructed energy from actual</td></tr>
+        <tr><td>Evaluated Sample Count</td><td>${stm.n ?? 'N/A'} readings</td><td>Sep 4–9 continuous 10-minute records</td></tr>
+      </tbody>
+    </table></div>`;
+
+  // Correlations table
+  const corrRows = (d.corr_top3||[]).map(c => `
+    <tr>
+      <td style="font-weight:600;">${c.turbine}</td>
+      <td>${c.pearson==null?'N/A':Number(c.pearson).toFixed(3)}</td>
+      <td>${c.spearman==null?'N/A':Number(c.spearman).toFixed(3)}</td>
+      <td>${c.n_paired}</td>
+    </tr>`).join('');
+  document.getElementById('corr-table').innerHTML = `
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Turbine</th><th>Pearson Correlation (r)</th><th>Spearman Rank Correlation</th><th>Paired Observations</th></tr></thead>
+      <tbody>${corrRows}</tbody>
+    </table></div>
+    <p style="font-size:12px; color:var(--text-light); margin-top:6px;">Top 3 shown. Full correlation matrix available in the Advanced panel on the Outage Analysis page.</p>`;
+
+  // Limitations
+  const limits = [
+    'Zero production during the outage window is assumed in order to quantify expected generation as potential energy loss.',
+    'Prediction uncertainty is not calibrated; no statistical prediction interval bounds are provided.',
+    'Reference turbines reside in different wind parks and may be subject to localized or micro-climatic wind regimes.',
+    'Power conversion applies linear interpolation on the manufacturer power curve; extrapolation above ' + fmt(d.power_curve_max_ws, 1) + ' m/s is disabled.',
+    'Actual grid delivery, curtailment events, and turbine mechanical availability logs are not captured in SCADA wind measurements.',
+    'WMAPE is undefined when the denominator approaches zero; valid only on non-zero wind regimes.',
+    'Shown-test observations were kept strictly independent and were not used for hyperparameter tuning or model selection.',
+  ];
+  document.getElementById('assumptions-list').innerHTML = limits.map(l=>`<li>${l}</li>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', loadInsuranceReport);
+</script>
+</body>
+</html>
